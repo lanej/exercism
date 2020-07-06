@@ -1,0 +1,12 @@
+/home/jlane/exercism/haskell/leap/package.yaml:
+  hash: 741adae21e7fab15e96ec98d318f3ec9cbc33dc86f419cd56cd829d6c64a1c54
+  size: 344
+  modtime: 1592172903
+/home/jlane/exercism/haskell/leap/leap.cabal:
+  hash: 5ac9c177e67f3dd4f1c4205dc31e7d1da069e8193595cea984ef0800b3a54371
+  size: 602
+  modtime: 1592172951
+/home/jlane/exercism/haskell/leap/test/Tests.hs:
+  hash: 7f9ef91a93abb48e59dc9c830e0685ab774cc738d78a1a9db4caa41beecbe1b4
+  size: 2343
+  modtime: 1592172904
