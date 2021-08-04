@@ -4,10 +4,10 @@ class Grep
   Match = Struct.new(:text, :line, :file, keyword_init: true)
 
   def self.grep(pattern, flags = [], files = [])
-    line_numbers     = flags.include?('-n')
-    ignore_case      = flags.include?('-i')
-    match_line       = flags.include?('-x')
-    invert_match     = flags.include?('-v')
+    line_numbers = flags.include?('-n')
+    ignore_case  = flags.include?('-i')
+    match_line   = flags.include?('-x')
+    invert_match = flags.include?('-v')
 
     print_only_filenames = flags.include?('-l')
     print_filenames      = files.size > 1
@@ -39,6 +39,7 @@ class Grep
   def initialize(pattern, files, ignore_case: false, entire_line: false, invert: false)
     pattern = "^#{pattern}$" if entire_line
     pattern = Regexp.new(pattern, (ignore_case && Regexp::IGNORECASE))
+
     @files = files
     @matcher = invert ? ->(l) { !pattern.match?(l) } : ->(l) { pattern.match?(l) }
   end

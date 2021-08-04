@@ -9,18 +9,15 @@ impl<'a> HighScores<'a> {
     }
 
     pub fn scores(&self) -> &[u32] {
-        return self.scores;
+        self.scores
     }
 
     pub fn latest(&self) -> Option<u32> {
-        return match self.scores().last() {
-            Some(score) => Some(score.to_owned()),
-            None => None,
-        };
+        self.scores().last().cloned()
     }
 
     pub fn personal_best(&self) -> Option<u32> {
-        return self.scores.iter().max().to_owned();
+        self.scores.iter().max().cloned()
     }
 
     pub fn personal_top_three(&self) -> Vec<u32> {

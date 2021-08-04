@@ -7,14 +7,14 @@ const DEFAULT: &str = "Whatever.";
 pub fn reply(message: &str) -> &str {
     let trimmed = message.trim().replace(" ", "");
     if trimmed == "" {
-        return EMPTY
+        return EMPTY;
     }
+
 
     let shout = message
         .trim()
         .split_whitespace()
-        .any(|word| word.len() > 2
-             && word.chars().all(|c| c.is_uppercase() || c == '!'));
+        .any(|word| word.len() > 2 && word.chars().all(|c| c.is_uppercase() || c == '!'));
 
     let question = trimmed.ends_with("?");
 
