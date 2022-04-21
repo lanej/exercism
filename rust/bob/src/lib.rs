@@ -6,10 +6,10 @@ const DEFAULT: &str = "Whatever.";
 
 pub fn reply(message: &str) -> &str {
     let trimmed = message.trim().replace(" ", "");
+
     if trimmed == "" {
         return EMPTY;
     }
-
 
     let shout = message
         .trim()

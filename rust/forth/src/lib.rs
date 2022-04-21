@@ -1,15 +1,11 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub type Value = i32;
-pub type ForthResult = Result<(), Error>;
+pub type Result = std::result::Result<(), Error>;
 
 pub struct Forth {
     stack: Vec<Value>,
-}
-
-pub struct Command<'a> {
-    name: &'a str,
-    instructions: Vec<&'a str>,
+    commands: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -21,103 +17,138 @@ pub enum Error {
 }
 
 impl Forth {
-    pub fn new() -> Self {
-        Self { stack: Vec::new() }
+    pub fn new() -> Forth {
+        Self {
+            stack: Vec::new(),
+            commands: BTreeMap::new(),
+        }
     }
 
-    pub fn stack(&self) -> Vec<Value> {
-        self.stack.clone()
+    pub fn stack(&self) -> &[Value] {
+        &self.stack
     }
 
-    pub fn eval(&mut self, input: &str) -> ForthResult {
-        let commands: HashMap<&str, &str> = HashMap::new();
-        let mut sequence: Option<Command> = None;
+    pub fn eval(&mut self, input: &str) -> Result {
+        let mut tokens: Vec<String> = input
+            .split_ascii_whitespace()
+            .map(|t| t.to_lowercase())
+            .rev()
+            .collect();
 
-        for token in input.split(" ") {
-            if let Ok(value) = i32::from_str_radix(token, 10) {
-                self.stack.push(value);
+        while let Some(token) = tokens.pop() {
+            if let Ok(digit) = token.parse::<i32>() {
+                self.stack.push(digit);
                 continue;
             }
 
-            match token.to_lowercase().as_str() {
+            if let Some(commands) = self.commands.get(&token) {
+                tokens.extend(&mut commands.clone().into_iter().rev());
+                continue;
+            }
+
+            match token.as_str() {
                 ":" => {
-                    match sequence {
-                        Some(mut command) => command.instructions.push(token),
-                        None => sequence = Some(Command { name: token, instructions: vec![] }),
-                    }
-                }
-                "dup" => {
-                    if self.stack.last().is_none() {
-                        return Err(Error::StackUnderflow);
-                    }
-                    self.stack.push(*self.stack.last().unwrap());
-                    continue;
-                }
-                "drop" => {
-                    if self.stack.pop().is_none() {
-                        return Err(Error::StackUnderflow);
-                    }
-                    continue;
-                }
-                "over" => {
-                    if self.stack.len() < 2 {
-                        return Err(Error::StackUnderflow);
-                    }
-                    let operand = *self.stack.get(self.stack.len() - 2).unwrap();
-                    self.stack.push(operand);
-                    continue;
-                }
-                "swap" => {
-                    let last = self.stack.len();
-                    if last < 2 {
-                        return Err(Error::StackUnderflow);
-                    }
-                    self.stack.swap(last - 2, last - 1);
-                    continue;
-                }
-                "+" => {
-                    if self.stack.len() < 2 {
-                        return Err(Error::StackUnderflow);
-                    }
-                    let mut terms = self.stack.drain(..);
-                    let operand = terms.next().unwrap();
-                    let result = terms.fold(operand, |acc, n| acc + n);
-                    self.stack.push(result);
-                }
-                "-" => {
-                    if self.stack.len() < 2 {
-                        return Err(Error::StackUnderflow);
-                    }
-                    let mut terms = self.stack.drain(..);
-                    let operand = terms.next().unwrap();
-                    let result = terms.fold(operand, |acc, n| acc - n);
-                    self.stack.push(result);
-                }
-                "*" => {
-                    if self.stack.len() < 2 {
-                        return Err(Error::StackUnderflow);
-                    }
-                    let mut terms = self.stack.drain(..);
-                    let operand = terms.next().unwrap();
-                    let result = terms.fold(operand, |acc, n| acc * n);
-                    self.stack.push(result);
-                }
-                "/" => {
-                    if self.stack.len() < 2 {
-                        return Err(Error::StackUnderflow);
-                    }
-                    if self.stack.iter().any(|&t| t == 0) {
-                        return Err(Error::DivisionByZero);
+                    let mut command_tokens: Vec<String> = Vec::new();
+                    let name: String;
+
+                    if let Some(word) = tokens.pop() {
+                        name = word;
+                    } else {
+                        return Err(Error::InvalidWord);
                     }
 
-                    let mut terms = self.stack.drain(..);
-                    let operand = terms.next().unwrap();
-                    let result = terms.fold(operand, |acc, n| acc / n);
-                    self.stack.push(result);
+                    if name.parse::<i32>().is_ok() {
+                        return Err(Error::InvalidWord);
+                    }
+
+                    let mut end = false;
+
+                    while let Some(word) = tokens.pop() {
+                        if word == ";" {
+                            end = true;
+                            break;
+                        } else if let Some(commands) = self.commands.get(&word) {
+                            command_tokens.append(&mut commands.clone());
+                        } else {
+                            command_tokens.push(word);
+                        }
+                    }
+
+                    if !end {
+                        return Err(Error::InvalidWord);
+                    }
+
+                    if command_tokens.is_empty() {
+                        return Err(Error::StackUnderflow);
+                    }
+
+                    self.commands.insert(name, command_tokens);
                 }
-                _ => return Err(Error::UnknownWord),
-            };
+                "+" => {
+                    let (a, b) = (self.stack.pop(), self.stack.pop());
+                    if a.is_none() || b.is_none() {
+                        return Err(Error::StackUnderflow);
+                    }
+                    self.stack.push(a.unwrap() + b.unwrap())
+                }
+                "-" => {
+                    let (a, b) = (self.stack.pop(), self.stack.pop());
+                    if a.is_none() || b.is_none() {
+                        return Err(Error::StackUnderflow);
+                    }
+                    self.stack.push(b.unwrap() - a.unwrap())
+                }
+                "*" => {
+                    let (a, b) = (self.stack.pop(), self.stack.pop());
+                    if a.is_none() || b.is_none() {
+                        return Err(Error::StackUnderflow);
+                    }
+                    self.stack.push(b.unwrap() * a.unwrap())
+                }
+                "dup" => {
+                    let a = self.stack.pop();
+                    if a.is_none() {
+                        return Err(Error::StackUnderflow);
+                    }
+                    self.stack.push(a.unwrap());
+                    self.stack.push(a.unwrap());
+                }
+                "drop" => {
+                    if let None = self.stack.pop() {
+                        return Err(Error::StackUnderflow);
+                    }
+                }
+                "swap" => match (self.stack.pop(), self.stack.pop()) {
+                    (Some(a), Some(b)) => {
+                        self.stack.push(a);
+                        self.stack.push(b);
+                    }
+                    _ => return Err(Error::StackUnderflow),
+                },
+                "over" => match (self.stack.pop(), self.stack.pop()) {
+                    (Some(a), Some(b)) => {
+                        self.stack.push(b);
+                        self.stack.push(a);
+                        self.stack.push(b);
+                    }
+                    _ => return Err(Error::StackUnderflow),
+                },
+                "/" => {
+                    // match with tuple
+                    let (a, b) = (self.stack.pop(), self.stack.pop());
+                    if a.is_none() || b.is_none() {
+                        return Err(Error::StackUnderflow);
+                    }
+                    if a == Some(0) {
+                        return Err(Error::DivisionByZero);
+                    }
+                    self.stack.push(b.unwrap() / a.unwrap())
+                }
+                _ => {
+                    return Err(Error::UnknownWord);
+                }
+            }
         }
-        Ok(())
+        return Ok(());
     }
 }

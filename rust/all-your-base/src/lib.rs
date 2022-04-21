@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 #[derive(Debug, PartialEq)]
 pub enum Error {
     InvalidInputBase,
@@ -33,38 +35,37 @@ pub enum Error {
 ///
 /// Notes:
 ///  * The empty slice ( "[]" ) is equal to the number 0.
-///  * Never output leading 0 digits. However, your function must be able to
-///     process input with leading 0 digits.
+///  * Never output leading 0 digits, unless the input number is 0, in which the output must be `[0]`.
+///    However, your function must be able to process input with leading 0 digits.
 ///
 pub fn convert(number: &[u32], from_base: u32, to_base: u32) -> Result<Vec<u32>, Error> {
-    let mut remainder = number.iter().enumerate().fold(0u32, |sum, (index, val)| {
-        sum + from_base.pow(index as u32) * val
-    }) as i32;
-
-    dbg!(to_base);
-    dbg!((remainder as f64).log(to_base as f64));
-    let positions = f64::ceil((remainder as f64).log(to_base as f64)) as u32;
-
-    let mut answer = Vec::new();
-
-    for position in (1..positions).rev() {
-        dbg!(position);
-        let taken = to_base.pow(position) as i32;
-        dbg!(taken);
-        let position_value = remainder - taken;
-        dbg!(position_value);
-
-        if position_value < 0 {
-            answer.push(0);
-        } else {
-            answer.push(to_base - 1);
-            remainder -= taken;
-        }
+    if number.is_empty() {
+        return Ok(vec![0]);
     }
+    let mut base_10 = number
+        .iter()
+        .rev()
+        .enumerate()
+        .fold(0, |acc, (pos, value)| {
+            acc + (value * from_base.pow(pos.try_into().unwrap()))
+        });
 
-    if remainder > 0 {
-        answer.push(remainder as u32)
-    }
+    dbg!(base_10);
 
-    Ok(answer)
+    Ok((0..31)
+        .rev()
+        .map(|pos| match to_base.checked_pow(pos) {
+            None => 0,
+            Some(pos_value) => {
+                if pos_value > base_10 {
+                    0
+                } else {
+                    let (quo, rem) = (base_10 / pos_value, base_10 % pos_value);
+                    base_10 = rem;
+                    quo
+                }
+            }
+        })
+        .skip_while(|x| 0 == *x)
+        .collect())
 }

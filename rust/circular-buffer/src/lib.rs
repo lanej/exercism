@@ -62,7 +62,7 @@ impl<T: Clone + Default> CircularBuffer<T> {
     }
 
     pub fn overwrite(&mut self, element: T) {
-        if self.buffer.len() < self.buffer.capacity() {
+        if self.buffer.len() <= self.buffer.capacity() {
             self.write(element).unwrap();
             return;
         }

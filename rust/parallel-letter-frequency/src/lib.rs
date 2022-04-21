@@ -1,17 +1,42 @@
 use std::collections::HashMap;
-use std::thread;
 
-pub fn frequency(input: &[&'static str], worker_count: usize) -> HashMap<char, usize> {
-    let mut results = HashMap::new();
-    let source = input.chunks(worker_count);
+pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
+    let mut frequency: HashMap<char, usize> = HashMap::new();
 
-    for chunk in source {
-        thread::spawn(move || println!("chunk\n{:?}", chunk));
-        // thread::spawn(move || println!("chunk: {:?}\n", chunk));
-        // thread::spawn(|| results.entry('a').and_modify(|e| *e += 1).or_insert(1))
+    let words: Vec<Vec<char>> = input
+        .join(" ")
+        .chars()
+        .collect::<Vec<char>>()
+        .chunks(worker_count)
+        .map(|chars| chars.to_vec())
+        .collect();
+
+    if words.is_empty() {
+        return frequency;
     }
 
-    results.entry('a').and_modify(|e| *e += 1).or_insert(1);
+    let (tx, rx) = std::sync::mpsc::channel();
+    let mut threads = Vec::with_capacity(worker_count);
 
-    results
+    for chunk in words {
+        let ttx = tx.clone();
+        threads.push(std::thread::spawn(move || {
+            for char in chunk.iter().filter(|c| char::is_alphabetic(**c)) {
+                ttx.send(*char).unwrap();
+            }
+        }));
+    }
+
+    drop(tx);
+
+    while let Ok(c) = rx.recv() {
+        frequency
+            .entry(c.to_ascii_lowercase())
+            .and_modify(|ec| {
+                *ec += 1;
+            })
+            .or_insert(1);
+    }
+
+    frequency
 }

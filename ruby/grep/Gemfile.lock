@@ -3,6 +3,7 @@ GEM
   specs:
     ast (2.4.0)
     jaro_winkler (1.5.4)
+    minitest (5.13.0)
     parallel (1.18.0)
     parser (2.7.1.2)
       ast (~> 2.4.0)
@@ -23,7 +24,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  minitest
   rubocop
 
 BUNDLED WITH
-   2.0.2
+   2.1.4
