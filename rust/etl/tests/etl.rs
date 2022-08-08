@@ -74,7 +74,9 @@ fn test_full_dataset() {
 }
 
 fn input_from(v: &[(i32, Vec<char>)]) -> BTreeMap<i32, Vec<char>> {
-    v.iter().cloned().collect()
+    v.iter()
+        .cloned()
+        .collect()
 }
 
 fn expected_from(v: &[(char, i32)]) -> BTreeMap<char, i32> {

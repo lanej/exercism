@@ -18,7 +18,7 @@ impl<'a> CodonsInfo<'a> {
             .map(str::from_utf8)
             .map(|sequence| self.name_for(sequence.unwrap()))
             .take_while(|&codon| codon != Some(STOP))
-            .collect::<Option<Vec<&'a str>>>()
+            .collect()
     }
 }
 

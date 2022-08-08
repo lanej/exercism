@@ -10,6 +10,7 @@ class RestApiTest(unittest.TestCase):
     def test_no_users(self):
         database = {"users": []}
         api = RestAPI(database)
+        api.dddd
 
         response = api.get("/users")
         expected = {"users": []}
