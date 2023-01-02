@@ -86,6 +86,19 @@ fn hand(hand: Vec<&str>) -> Win {
         {
             Win::StraightFlush(va, vb, vc, vd, ve)
         }
+        [(sa, va), (sb, vb), (sc, vc), (sd, vd), (se, ace)]
+            if (sa == sb)
+                && (sb == sc)
+                && (sc == sd)
+                && (sd == se)
+                && (vb == va + 1)
+                && (vc == va + 2)
+                && (vd == va + 3)
+                && ace == Value::Ace as u8 =>
+        {
+            Win::StraightFlush(1, va, vb, vc, vd)
+        }
+        [(_, 2), (_, 3), (_, 4), (_, 5), (_, ace)] if ace == Value::Ace as u8 => Win::Straight(5),
         [(_, a), (_, b), (_, c), (_, d), (_, e)] | [(_, e), (_, a), (_, b), (_, c), (_, d)]
             if (a == b) && (b == c) && (c == d) =>
         {
