@@ -9,7 +9,7 @@ enum Suit {
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 #[repr(u8)]
 enum Value {
-    Two,
+    Two = 2,
     Three,
     Four,
     Five,
@@ -147,14 +147,12 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
     winning_hands.sort_by(|(_, a), (_, b)| a.cmp(b));
 
-    let best_win = &winning_hands.last().unwrap().1;
-
-    dbg!(&winning_hands.last());
+    let best_win = winning_hands.last().unwrap().1;
 
     winning_hands
-        .iter()
+        .into_iter()
         .rev()
-        .take_while(|(_, v)| v == best_win)
-        .map(|(h, _)| **h)
+        .take_while(|(_, v)| v == &best_win)
+        .map(|(h, _)| *h)
         .collect()
 }
